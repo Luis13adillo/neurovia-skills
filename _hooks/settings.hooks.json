@@ -1,0 +1,85 @@
+{
+  "_comment": [
+    "Reference copy of the `hooks` block from ~/.claude/settings.json, which is",
+    "owned and rewritten by Claude Code itself and is therefore in no repository.",
+    "This file is documentation, not configuration -- nothing reads it at runtime.",
+    "It exists so the wiring can be rebuilt by hand after a settings.json reset.",
+    "",
+    "Entries owned by this repo: every `_hooks/rubric-status.js` line.",
+    "Entries NOT owned by this repo: the gsd-* hooks, which still live in the",
+    "unversioned ~/.claude/hooks/ and are reproduced here only so a rebuild from",
+    "this file restores the block as it actually was.",
+    "",
+    "Keep in sync by hand when the wiring changes. Last verified 2026-08-11."
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/hooks/gsd-check-update.js\""
+          },
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/skills/_hooks/rubric-status.js\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/skills/_hooks/rubric-status.js\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/skills/_hooks/rubric-status.js\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/skills/_hooks/rubric-status.js\""
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/skills/_hooks/rubric-status.js\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/hooks/gsd-context-monitor.js\""
+          },
+          {
+            "type": "command",
+            "command": "node \"/Users/luismiguel/.claude/skills/_hooks/rubric-status.js\""
+          }
+        ]
+      }
+    ]
+  }
+}

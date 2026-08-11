@@ -3,8 +3,11 @@
  * Reports Claude Code session activity to the RUBRIC dashboard.
  *
  * Wired into ~/.claude/settings.json for SessionStart, UserPromptSubmit,
- * Notification, Stop and SessionEnd. Works out which business the session
- * belongs to, then posts a status update.
+ * PostToolUse, Notification, Stop and SessionEnd. Works out which business the
+ * session belongs to, then posts a status update.
+ *
+ * Lives in the neurovia-skills repo. The canonical wiring is recorded beside it
+ * in settings.hooks.json; see README.md to rebuild it.
  *
  * Safe by design: never blocks, never fails a session, never prints anything.
  * If the dashboard isn't running the request is refused instantly and this
@@ -28,7 +31,25 @@ const BUSINESSES = [
   ['Amigos-bakery-systema', 'amigos-bakery'],
 ];
 
-const ACTIVE_EVENTS = new Set(['SessionStart', 'UserPromptSubmit']);
+// Events that mean "this session is doing work right now".
+//
+// PostToolUse is here to close two holes at once, both of which made the
+// console claim something that was not true:
+//
+//   1. Nothing fires when a permission prompt is APPROVED. Claude Code notifies
+//      on the prompt appearing, never on the human answering it, so a session
+//      that went to `waiting` stayed there through however many minutes of real
+//      work followed. Running a tool is the first observable proof the session
+//      is unblocked, so it is what clears the gate.
+//   2. A turn longer than the console's 15-minute live TTL used to decay to
+//      `recent` mid-run -- "45m ago" for a session actively working. Every tool
+//      call now refreshes updatedAt, so a long run stays honestly Active.
+//
+// This must stay in sync with the settings.json registration: statusFor()
+// treats any event it does not recognise as `idle`, so registering PostToolUse
+// WITHOUT adding it here would mark every agent idle after every tool call --
+// strictly worse than the bug it fixes.
+const ACTIVE_EVENTS = new Set(['SessionStart', 'UserPromptSubmit', 'PostToolUse']);
 const AGENT_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 function bail() { process.exit(0); }
