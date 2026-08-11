@@ -31,7 +31,7 @@ lsof -nP -iTCP:5050 -sTCP:LISTEN -t | xargs -I{} sh -c 'lsof -a -p {} -d cwd -Fn
 
 | Repo | Root | Remote | State |
 |---|---|---|---|
-| **neurovia-command-center** | `/Users/luismiguel/Desktop/rubric` | `github.com/Luis13adillo/neurovia-command-center` | `VERIFIED` — branch `main`, HEAD `9c8b707` |
+| **neurovia-command-center** | `/Users/luismiguel/Desktop/rubric` | `github.com/Luis13adillo/neurovia-command-center` | `VERIFIED` — checked out on branch `feat/qa-runs-v1`; `origin/main` at `53cffa9` |
 | **neurovia-skills** | `/Users/luismiguel/.claude/skills` | `github.com/Luis13adillo/neurovia-skills` | `VERIFIED` — **private**, branch `main`, baseline `2c18c1d` |
 
 The skills repo root **is the skills folder itself**. There is no wrapper directory, and no
