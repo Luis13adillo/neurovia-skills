@@ -76,6 +76,11 @@ Step indexes are POSITIONAL and must match the pipeline exactly:
 | 7 | Push to main | push 3 |
 | 8 | Watch deploy + confirm | push 4-5 |
 
+Step 6 also records one **structured QA Run** (RUBRIC → QA Runs tab), bound to the commit
+about to be pushed. Unlike the `flow-event.sh` calls above it writes a permanent record, so
+it is the one dashboard call whose refusals are worth reading — it prints a single stderr
+line when it declines. It still always exits 0 and still never changes what you do.
+
 Rules for these calls:
 - They are reporting only. NEVER let one change what you do, and never stop
   because one failed — the script always exits 0 whether the dashboard is
@@ -310,16 +315,48 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "no-ups
 ~/Desktop/rubric/tools/flow-event.sh step:start 6 "Local production build"
 export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
 
-# Type check (what pre-commit already ran, but re-run in case main was rebased)
-npx tsc --noEmit
+# Re-run the cheap gates against the COMMITTED tree. Step 4 ran them before
+# staging, on a dirty tree — those results describe code that was never
+# committed. check-ids takes 0.7s, so re-running it costs nothing.
+npx tsc --noEmit;       TSC=$?
+npm run test:check-ids; IDS=$?
 
-# Production build (the deploy-breaker — test it locally FIRST)
-npm run build 2>&1 | tail -40
+# Production build (the deploy-breaker — test it locally FIRST).
+# PIPESTATUS[0] is MANDATORY. After a pipe, $? is tail's status and is ALWAYS
+# 0, so `npm run build 2>&1 | tail -40; B=$?` records a broken build as a pass.
+# The :-${pipestatus[1]} fallback is also mandatory: zsh does not define
+# PIPESTATUS at all (its array is lowercase and 1-indexed), so the bash-only
+# form yields empty in a zsh session and silently loses every build result.
+# Skipped entirely if a cheaper gate already failed; BUILD then stays empty,
+# which is recorded as "not attempted", never as success.
+BUILD=
+if [ $TSC -eq 0 ] && [ $IDS -eq 0 ]; then
+  npm run build 2>&1 | tail -40
+  BUILD=${PIPESTATUS[0]:-${pipestatus[1]}}
+fi
+
+# One structured QA Run against the commit that is about to be pushed. This is
+# the only place it can be honest: at step 4 the commit did not exist yet and
+# the tree was dirty, so there was nothing truthful to bind the evidence to.
+# Results come from the exit codes above, NEVER from your reading of the
+# output. Set QA_TASK_ID first if this ship closes a Sprint task; never guess
+# one. The script exits 0 whatever happens and refuses to record at all if the
+# tree is dirty or HEAD is detached.
+export QA_TASK_ID=B-0003   # ONLY if this ship closes a Sprint task. Never guess one.
+~/Desktop/rubric/tools/qa-run.sh --auto-commit --project mt-barbershop --env local \
+  --check-exit "typecheck:npx tsc --noEmit:$TSC" \
+  --check-exit "lint:npm run test:check-ids:$IDS" \
+  --check-exit "build:npm run build:$BUILD"
+
 ~/Desktop/rubric/tools/flow-event.sh step:complete 6
 ```
 
 If `npm run build` fails locally, the Vercel deploy WILL fail. Do not push. Fix first.
 Report it first: `flow-event.sh step:error 6 "build failed: <first error>"`.
+
+Run the `qa-run.sh` call even when a gate fails — a recorded `fail` against a known commit
+is the point. Do not hand-write `--check-exit` values: passing a literal `:0` for a command
+you did not run is the free-text QA problem in a structured costume.
 
 For high-stakes changes (touching `/api/**`, auth, payments, queue state machine), optionally run:
 ```bash
