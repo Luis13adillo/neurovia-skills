@@ -48,12 +48,17 @@ git -C ~/.claude/skills remote -v
 
 | File | Path | Status |
 |---|---|---|
-| Global hooks | `/Users/luismiguel/.claude/hooks/` | `VERIFIED` — **not in any repo, unversioned** |
+| Global hooks (gsd-*) | `/Users/luismiguel/.claude/hooks/` | `VERIFIED` — **not in any repo, unversioned** |
+| Rubric telemetry hook | `/Users/luismiguel/.claude/skills/_hooks/rubric-status.js` | `VERIFIED` — **versioned** in neurovia-skills since 2026-08-11 |
 | Global settings | `/Users/luismiguel/.claude/settings.json` | `VERIFIED` — **not in any repo, unversioned** |
 
-Both are **siblings** of `~/.claude/skills`, not members of it. The neurovia-skills repo does
-not protect either one. `settings.json` is additionally owned and rewritten by Claude Code
-itself (`/config`, permission approvals), so it cannot simply be symlinked into a repo.
+`~/.claude/hooks/` is a **sibling** of `~/.claude/skills`, not a member of it, so the
+neurovia-skills repo does not protect what is still in there. `rubric-status.js` was moved out
+of it into `skills/_hooks/` precisely to fix that; the path in `settings.json` points at the
+versioned copy, and `~/.claude/hooks/rubric-status.js` no longer exists. `settings.json` is
+additionally owned and rewritten by Claude Code itself (`/config`, permission approvals), so it
+cannot simply be symlinked into a repo — `skills/_hooks/settings.hooks.json` keeps a reference
+copy of the hooks block instead.
 
 ---
 
