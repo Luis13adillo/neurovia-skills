@@ -1,0 +1,15 @@
+# Dependencies (vendored under brainstorming/scripts)
+node_modules/
+
+# Env files — all variants, keep the examples
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Logs, caches, runtime state
+*.log
+*.pid
+.cache/
