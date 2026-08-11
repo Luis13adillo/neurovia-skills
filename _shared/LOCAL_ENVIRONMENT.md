@@ -67,9 +67,11 @@ itself (`/config`, permission approvals), so it cannot simply be symlinked into 
 | 5055 | Docs | `Desktop/rubric/templates/docs` |
 | 5058 | Links | `Desktop/rubric/templates/links` |
 | 5060 | Sprint | `Desktop/rubric/templates/sprint` |
+| 5062 | Health | `Desktop/rubric/templates/health` |
+| 5064 | QA Runs | `Desktop/rubric/templates/qa` |
 | 5210 | Second Brain | `Desktop/rubric/templates/second-brain` |
 
-The four children are spawned and reverse-proxied by the console. **Start only via
+The six children are spawned and reverse-proxied by the console. **Start only via
 `~/Desktop/rubric/start.sh`** — never launch a child by hand, and never assume a tab is
 served by its own port just because its folder has a `server.js`.
 
