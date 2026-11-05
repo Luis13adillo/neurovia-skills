@@ -6,6 +6,7 @@ rather than in `~/.claude/hooks/`, which is inside no repository.
 | File | What it is |
 |---|---|
 | `rubric-status.js` | Reports Claude Code session activity to the Rubric console. The **only** writer of agent telemetry. |
+| `changelog-brief.js` | SessionStart only. In the session's repo, runs `git pull --ff-only` if the tree is clean and has an upstream, then prints the last 5 entries of `docs/CHANGELOG.md`. Always exits 0; prints nothing in repos without a changelog. |
 | `settings.hooks.json` | Reference copy of the `hooks` block from `settings.json`. Documentation, not configuration — nothing reads it at runtime. |
 
 ## Why the hook is here and not in `~/.claude/hooks/`
@@ -57,3 +58,22 @@ recognise as `idle`**, so registering an event in `settings.json` without adding
 it to `ACTIVE_EVENTS` marks the agent idle every time that event fires. For
 `PostToolUse` that means idle after every single tool call — strictly worse than
 no hook at all.
+
+## `changelog-brief.js`
+
+Adds the newest changelog entries to the start of every Claude Code session in
+a client repo (MT-Barbershop-Systems first; any repo with `docs/CHANGELOG.md`
+or `CHANGELOG.md`). It never pulls a dirty tree or a branch with no upstream,
+never merges or rebases (`--ff-only`, 5 s timeout, no credential prompts), and
+swallows every error.
+
+Test it by hand from a client repo:
+
+```bash
+echo '{"hook_event_name":"SessionStart","cwd":"'"$HOME"'/Desktop/MT-Barbershop-Systems"}' \
+  | node ~/.claude/skills/_hooks/changelog-brief.js
+```
+
+Wire it by adding the `changelog-brief.js` line from `settings.hooks.json` to
+the existing SessionStart `hooks` array in `~/.claude/settings.json` (merge; do
+not replace the block). Codex does not run Claude hooks; it reads `AGENTS.md`.
